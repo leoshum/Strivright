@@ -59,9 +59,7 @@ class _SignInState extends State<SignIn> {
                 elevation: 7.0,
                 onPressed: () {
                   _signIn().then((dynamic user) {
-                    print('USER !!!!!');
                     userBlock.setUserUid(user.uid);
-                    print(user.uid);
                     Navigator.of(context).pushReplacementNamed('/legacy');
                   }).catchError((dynamic error) => print(error));
                 },

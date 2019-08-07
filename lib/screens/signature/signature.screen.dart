@@ -125,7 +125,6 @@ class DrawerPageState extends State<DrawerPage> {
     var currentLocation;
     try {
       currentLocation = await location.getLocation();
-      print(currentLocation);
     } catch (e) {
       print(e);
       currentLocation = null;
