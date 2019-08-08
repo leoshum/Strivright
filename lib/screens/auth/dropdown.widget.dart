@@ -10,12 +10,11 @@ class Sites {
   String name;
   Sites(this.id, this.name);
   static List<Sites> getSites() {
-    return <Sites>[Sites(1, 'Site1'), Sites(2, 'Site2')];
+    return <Sites>[Sites(1, 'Site 1'), Sites(2, 'Site 2')];
   }
 }
 
 class _DropDownState extends State<DropDown> {
-
   List<Sites> _sites = Sites.getSites();
   List<DropdownMenuItem<Sites>> _dropDownMenuItems;
   Sites _selectedSite;
@@ -31,7 +30,7 @@ class _DropDownState extends State<DropDown> {
     for (Sites site in sites) {
       items.add(DropdownMenuItem(
         value: site,
-        child: Text(site.name),
+        child: Text(site.name, style: (TextStyle(fontSize: 18.0))),
       ));
     }
     return items;
@@ -40,32 +39,25 @@ class _DropDownState extends State<DropDown> {
   onChangeDropDownItem(Sites selectedSite) {
     setState(() {
       _selectedSite = selectedSite;
-
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      child: Center(
-        child: Column(
-          children: <Widget>[
-            Text('Select a site'),
-            SizedBox(
-              height: 10,
-            ),
-            DropdownButton(
-              value: _selectedSite,
-              items: _dropDownMenuItems,
-              onChanged: onChangeDropDownItem,
-            ),
-            SizedBox(
-              height: 10.0,
-            ),
-            Text('Selected: ${_selectedSite.name}')
-          ],
+    return InputDecorator(
+        decoration: InputDecoration(
+          labelStyle: TextStyle(color: Colors.redAccent, fontSize: 16.0),
+          icon: Icon(Icons.language),
+          errorStyle: TextStyle(color: Colors.redAccent, fontSize: 16.0),
+          hintText: 'Please select expense',
         ),
-      ),
-    );
+        child: DropdownButtonHideUnderline(
+          child: DropdownButton(
+            value: _selectedSite,
+            isDense: true,
+            items: _dropDownMenuItems,
+            onChanged: onChangeDropDownItem,
+          ),
+        ));
   }
 }

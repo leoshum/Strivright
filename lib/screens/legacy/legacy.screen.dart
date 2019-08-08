@@ -7,6 +7,7 @@ class LegacyPage extends StatelessWidget {
   Future<FirebaseUser> _signOut() async {
     await _auth.signOut();
   }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -33,9 +34,7 @@ class LegacyPage extends StatelessWidget {
           RaisedButton(
             child: Text('Disagree'),
             onPressed: () {
-              _signOut().then((data){
-                Navigator.of(context).pushReplacementNamed('/');
-              });
+              Navigator.of(context).pushReplacementNamed('/homepage');
             },
           )
         ],

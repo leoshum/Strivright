@@ -11,8 +11,20 @@ class _HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     return new Scaffold(
       appBar: new AppBar(
-        title: new Text('Dashboard'),
+        title: new Text('Home'),
         centerTitle: true,
+        actions: <Widget>[
+          FlatButton(
+              child: Text('Logout',
+                  style: TextStyle(fontSize: 17.0, color: Colors.white)),
+              onPressed: () {
+                FirebaseAuth.instance.signOut().then((value) {
+                  Navigator.of(context).pushReplacementNamed('/login');
+                }).catchError((e) {
+                  print(e);
+                });
+              })
+        ],
       ),
       body: Center(
         child: Container(
@@ -20,21 +32,6 @@ class _HomePageState extends State<HomePage> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: <Widget>[
               new Text('You are logged in'),
-              SizedBox(
-                height: 10.0,
-              ),
-              new OutlineButton(
-                borderSide: BorderSide(
-                    color: Colors.red, style: BorderStyle.solid, width: 3.0),
-                child: Text('Logout'),
-                onPressed: () {
-                  FirebaseAuth.instance.signOut().then((value) {
-                    Navigator.of(context).pushReplacementNamed('/page');
-                  }).catchError((e) {
-                    print(e);
-                  });
-                },
-              )
             ],
           ),
         ),

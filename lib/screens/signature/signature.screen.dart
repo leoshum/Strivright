@@ -2,11 +2,14 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:typed_data';
 import 'dart:ui' as ui;
+import 'package:app_flutter/common/services/loader.service.dart';
+import 'package:app_flutter/common/widgets/loader.widget.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:location/location.dart';
 import 'package:app_flutter/common/services/user.dart';
+import 'package:rxdart/rxdart.dart';
 
 class DrawerPage extends StatefulWidget {
   @override
@@ -17,8 +20,10 @@ class DrawerPage extends StatefulWidget {
 
 class DrawerPageState extends State<DrawerPage> {
   GlobalKey<SignatureState> signatureKey = GlobalKey();
+  bool loader = false;
   var image;
   Map<String, double> userLocation;
+  var _firestore = Firestore.instance;
   @override
   void initState() {
     super.initState();
@@ -26,7 +31,6 @@ class DrawerPageState extends State<DrawerPage> {
 
   FloatingActionButton _button() {
     return FloatingActionButton(
-      heroTag: 'hero4',
       backgroundColor: Color.fromRGBO(34, 148, 237, 1),
       onPressed: () {
         Navigator.of(context).pushReplacementNamed('/legacy');
@@ -38,57 +42,61 @@ class DrawerPageState extends State<DrawerPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: Signature(key: signatureKey),
-      floatingActionButton: Padding(
-        padding: const EdgeInsets.only(left: 28.0),
-        child: StreamBuilder(
-          stream: userBlock.userUid,
-          builder: (context, AsyncSnapshot<String> snapshot) {
-            return Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: <Widget>[
-                _button(),
-                FloatingActionButton(
-                  heroTag: 'hero1',
-                  backgroundColor: Color.fromRGBO(34, 148, 237, 1),
-                  onPressed: () {
-                    info();
-                  },
-                  tooltip: 'Add',
-                  child: Icon(Icons.help_outline, color: Colors.white),
-                ),
-                FloatingActionButton(
-                  heroTag: 'hero2',
-                  backgroundColor: Color.fromRGBO(34, 148, 237, 1),
-                  onPressed: () {
-                    signatureKey.currentState.clearPoints();
-                  },
-                  tooltip: 'Add',
-                  child: Text('Clear'),
-                ),
-                FloatingActionButton(
-                  heroTag: 'hero3',
-                  backgroundColor: Color.fromRGBO(34, 148, 237, 1),
-                  onPressed: () {
-                    setState(() {
-                      image = signatureKey.currentState.rendered;
-                    });
-                    showImage(context, snapshot.data);
-                    _getLocation()
-                        .then((value) {})
-                        .catchError((error) => print(error));
-                    Navigator.of(context).pushReplacementNamed('/homepage');
-                  },
-                  tooltip: 'Add',
-                  child: Text('Save'),
-                ),
-              ],
-            );
-          },
-        ),
-      ),
-    );
+    return StreamBuilder(
+        stream: Observable.combineLatest2(
+            userBlock.userUid,
+            loaderBlock.isLoading,
+            (userUid, isLoading) => [userUid, isLoading]),
+        builder: (context, AsyncSnapshot<List> snapshot) {
+          return Scaffold(
+            body: snapshot.data[1] ? Loader() : Signature(key: signatureKey),
+            floatingActionButton: Padding(
+              padding: const EdgeInsets.only(left: 28.0),
+              child: snapshot.data[1]
+                  ? null
+                  : Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: <Widget>[
+                        _button(),
+                        FloatingActionButton(
+                          backgroundColor: Color.fromRGBO(34, 148, 237, 1),
+                          onPressed: () async {
+                            info();
+                          },
+                          tooltip: 'Add',
+                          child: Icon(Icons.help_outline, color: Colors.white),
+                        ),
+                        FloatingActionButton(
+                          backgroundColor: Color.fromRGBO(34, 148, 237, 1),
+                          onPressed: () {
+                            signatureKey.currentState.clearPoints();
+                          },
+                          tooltip: 'Add',
+                          child: Text('Clear'),
+                        ),
+                        FloatingActionButton(
+                          backgroundColor: Color.fromRGBO(34, 148, 237, 1),
+                          onPressed: () {
+                            loaderBlock.setLoaderState(true);
+                            setState(() {
+                              image = signatureKey.currentState.rendered;
+                            });
+                            showImage(context, snapshot.data[0]).then((data) =>
+                                _getLocation(snapshot.data[0]).then((data) =>
+                                    Navigator.of(context)
+                                        .pushReplacementNamed('/homepage')
+                                        .then((data) {
+                                      loaderBlock.setLoaderState(false);
+                                    })));
+                          },
+                          tooltip: 'Add',
+                          child: Text('Save'),
+                        ),
+                      ],
+                    ),
+            ),
+          );
+        });
   }
 
   Future<void> info() async {
@@ -119,12 +127,28 @@ class DrawerPageState extends State<DrawerPage> {
     );
   }
 
-  Future<dynamic> _getLocation() async {
-    // TODO Some problems with lng, lat
-    var location = Location();
-    var currentLocation;
+  Future<String> _getDocId(userId) async {
+    String docId;
+    await _firestore
+        .collection('users')
+        .where("uid", isEqualTo: userId)
+        .getDocuments()
+        .then((qs) => docId = qs.documents[0].documentID);
+    return docId;
+  }
+
+  Future<LocationData> _getLocation(userId) async {
+    LocationData currentLocation;
+    Location location = new Location();
     try {
       currentLocation = await location.getLocation();
+      String docId;
+      docId = await _getDocId(userId);
+      _firestore.collection('users').document(docId).updateData({
+        'lat': currentLocation.latitude,
+        'lng': currentLocation.longitude,
+        'trust': true
+      });
     } catch (e) {
       print(e);
       currentLocation = null;
@@ -139,21 +163,23 @@ class DrawerPageState extends State<DrawerPage> {
     final Directory systemTempDir = Directory.systemTemp;
     final File file = await new File('${systemTempDir.path}/foo.png').create();
     file.writeAsBytes(finalImage);
+    var docId;
+    docId = await _getDocId(userId);
     final StorageReference ref =
-        FirebaseStorage.instance.ref().child('image.png');
+        FirebaseStorage.instance.ref().child('$docId.png');
     final StorageUploadTask uploadTask = ref.putFile(file);
     var dowurl = await (await uploadTask.onComplete).ref.getDownloadURL();
+    var now = new DateTime.now();
     final url = dowurl.toString();
-    Firestore.instance
+    await _firestore
         .collection('users')
-        .document(userId)
-        .updateData({'url': url});
+        .document(docId)
+        .updateData({'signUrl': url, 'createAt': now});
   }
 }
 
 class Signature extends StatefulWidget {
   Signature({Key key}) : super(key: key);
-
   @override
   State<StatefulWidget> createState() {
     return SignatureState();

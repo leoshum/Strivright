@@ -1,3 +1,4 @@
+import 'package:app_flutter/screens/splash/splash.screen.dart';
 import 'package:flutter/material.dart';
 
 import 'screens/auth/signin.screen.dart';
@@ -12,10 +13,11 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      home: SignIn(),
+      home: SplashScreen(),
       routes: <String, WidgetBuilder>{
         '/page': (BuildContext context) => new MyApp(),
         '/homepage': (BuildContext context) => new HomePage(),
+        '/login': (BuildContext context) => new SignIn(),
         '/drawer': (BuildContext context) => new DrawerPage(),
         '/legacy': (BuildContext context) => new LegacyPage()
       },
