@@ -1,6 +1,7 @@
 import 'package:app_flutter/common/services/loader.service.dart';
-import 'package:app_flutter/common/services/timer.service.dart';
-import 'package:app_flutter/common/services/user.dart';
+import 'package:app_flutter/common/widgets/timer.widget.dart';
+import 'package:app_flutter/common/services/user.serivce.dart';
+import 'package:app_flutter/common/widgets/dialogs.widget.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -15,9 +16,18 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   @override
   void initState() {
+    userBlock.user.listen((user) {
+      _getUser(user.email).take(1).listen((users) {
+        if (!users.documents[0]['trust']) {
+          dialogs.confirm(context, 'Signature',
+              'We need your signature on file, would you like to enter it now');
+        }
+      });
+    });
     super.initState();
   }
 
+  Dialogs dialogs = Dialogs();
   Map<String, double> userLocation;
   bool isClockIn = false;
   Stopwatch stopwatch = new Stopwatch();
@@ -26,7 +36,6 @@ class _HomePageState extends State<HomePage> {
     DocumentReference newDoc = await _firestore
         .collection('sessions')
         .add({"uid": userId, 'startedAt': date});
-    print(newDoc.documentID);
     return newDoc.documentID;
   }
 
@@ -38,12 +47,10 @@ class _HomePageState extends State<HomePage> {
   }
 
   _getLocation(sessionId) async {
-    print(sessionId);
     LocationData currentLocation;
     Location location = new Location();
     try {
       currentLocation = await location.getLocation();
-      print(currentLocation.latitude);
       _firestore.collection('sessions').document(sessionId).updateData({
         'lat': currentLocation.latitude,
         'lng': currentLocation.longitude,
@@ -55,15 +62,22 @@ class _HomePageState extends State<HomePage> {
     return currentLocation;
   }
 
+  Stream<QuerySnapshot> _getUser(email) {
+    //TODO rewrite this function
+    return _firestore
+        .collection('users')
+        .where("email", isEqualTo: email)
+        .snapshots();
+  }
+
   var sesId;
   @override
   Widget build(BuildContext context) {
     loaderBlock.setLoaderState(false);
+
     return StreamBuilder(
-        stream: Observable.combineLatest2(
-            userBlock.userUid,
-            loaderBlock.isLoading,
-            (userUid, isLoading) => [userUid, isLoading]),
+        stream: Observable.combineLatest2(userBlock.user, loaderBlock.isLoading,
+            (user, isLoading) => [user, isLoading]),
         builder: (context, AsyncSnapshot<List> snapshot) {
           return Scaffold(
               appBar: AppBar(
@@ -106,7 +120,10 @@ class _HomePageState extends State<HomePage> {
                                         var ts = stopwatch.elapsed.toString();
 
                                         await _setSessionEnd(
-                                            snapshot.data[0], now, ts, sesId);
+                                            snapshot.data[0].uid,
+                                            now,
+                                            ts,
+                                            sesId);
                                         setState(() => stopwatch.reset());
                                       },
                                       child: Text(
@@ -122,10 +139,8 @@ class _HomePageState extends State<HomePage> {
                                           isClockIn = true;
                                           stopwatch.start();
                                         });
-                                        print(snapshot.data);
                                         sesId = await _setSessionStart(
-                                            snapshot.data[0], now);
-                                        print(sesId);
+                                            snapshot.data[0].uid, now);
                                         await _getLocation(sesId);
                                       },
                                       child: Text(

@@ -7,7 +7,7 @@ import 'package:app_flutter/common/widgets/loader.widget.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
-import 'package:app_flutter/common/services/user.dart';
+import 'package:app_flutter/common/services/user.serivce.dart';
 import 'package:rxdart/rxdart.dart';
 
 class DrawerPage extends StatefulWidget {
@@ -30,8 +30,9 @@ class DrawerPageState extends State<DrawerPage> {
   FloatingActionButton _button() {
     return FloatingActionButton(
       backgroundColor: Color.fromRGBO(34, 148, 237, 1),
+      heroTag: 'hero4',
       onPressed: () {
-        Navigator.pop(context);
+        Navigator.of(context).pushReplacementNamed('/legacy');
       },
       tooltip: 'Add',
       child: Icon(Icons.arrow_back),
@@ -41,12 +42,9 @@ class DrawerPageState extends State<DrawerPage> {
   @override
   Widget build(BuildContext context) {
     return StreamBuilder(
-        stream: Observable.combineLatest2(
-            userBlock.userUid,
-            loaderBlock.isLoading,
-            (userUid, isLoading) => [userUid, isLoading]),
+        stream: Observable.combineLatest2(userBlock.user, loaderBlock.isLoading,
+            (user, isLoading) => [user, isLoading]),
         builder: (context, AsyncSnapshot<List> snapshot) {
-          print(snapshot.data);
           return snapshot.data is List
               ? Scaffold(
                   body: snapshot.data[1]
@@ -63,6 +61,7 @@ class DrawerPageState extends State<DrawerPage> {
                               FloatingActionButton(
                                 backgroundColor:
                                     Color.fromRGBO(34, 148, 237, 1),
+                                heroTag: 'hero1',
                                 onPressed: () async {
                                   info();
                                 },
@@ -71,6 +70,7 @@ class DrawerPageState extends State<DrawerPage> {
                                     color: Colors.white),
                               ),
                               FloatingActionButton(
+                                heroTag: 'hero2',
                                 backgroundColor:
                                     Color.fromRGBO(34, 148, 237, 1),
                                 onPressed: () {
@@ -80,6 +80,7 @@ class DrawerPageState extends State<DrawerPage> {
                                 child: Text('Clear'),
                               ),
                               FloatingActionButton(
+                                heroTag: 'hero3',
                                 backgroundColor:
                                     Color.fromRGBO(34, 148, 237, 1),
                                 onPressed: () {
@@ -87,7 +88,7 @@ class DrawerPageState extends State<DrawerPage> {
                                   setState(() {
                                     image = signatureKey.currentState.rendered;
                                   });
-                                  showImage(context, snapshot.data[0]).then(
+                                  showImage(context, snapshot.data[0].uid).then(
                                       (data) => Navigator.of(context)
                                           .pushReplacementNamed('/homepage'));
                                 },
@@ -139,8 +140,6 @@ class DrawerPageState extends State<DrawerPage> {
         .then((qs) => docId = qs.documents[0].documentID);
     return docId;
   }
-
-
 
   Future<dynamic> showImage(BuildContext context, userId) async {
     final ui.Image pngBytes = await Future<ui.Image>.value(image);

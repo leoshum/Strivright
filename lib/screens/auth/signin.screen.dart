@@ -4,7 +4,7 @@ import 'package:app_flutter/screens/auth/dropdown.widget.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:app_flutter/common/services/user.dart';
+import 'package:app_flutter/common/services/user.serivce.dart';
 
 class SignIn extends StatefulWidget {
   @override
@@ -18,7 +18,6 @@ class _SignInState extends State<SignIn> {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   Future<FirebaseUser> _signIn(BuildContext context) async {
     loaderBlock.setLoaderState(true);
-
     AuthResult result = await _auth.signInWithEmailAndPassword(
         email: _email, password: _password);
     FirebaseUser user = result.user;
@@ -33,14 +32,6 @@ class _SignInState extends State<SignIn> {
       duration: Duration(seconds: 3),
     );
     _scaffoldKey.currentState.showSnackBar(snackBar);
-  }
-
-  Stream<QuerySnapshot> _getUser(userId) {
-    //TODO rewrite this function
-    return _firestore
-        .collection('users')
-        .where("email", isEqualTo: userId)
-        .snapshots();
   }
 
   @override
@@ -98,21 +89,11 @@ class _SignInState extends State<SignIn> {
                                 elevation: 7.0,
                                 onPressed: () {
                                   _signIn(context).then((dynamic user) {
-                                    _getUser(_email).listen((users) {
-                                      if (users.documents[0]['trust']) {
-                                        Navigator.of(context)
-                                            .pushReplacementNamed('/homepage')
-                                            .then((data) => loaderBlock
-                                                .setLoaderState(false));
-                                        return;
-                                      }
-                                      userBlock.setUserUid(user.uid);
-                                      Navigator.of(context)
-                                          .pushReplacementNamed('/legacy');
-                                    });
+                                    userBlock.setUserUid(user);
+                                    Navigator.of(context)
+                                        .pushReplacementNamed('/homepage');
                                   }).catchError((dynamic error) {
                                     loaderBlock.setLoaderState(false);
-
                                     _showSnackBar('Wrong credentials');
                                   });
                                 },

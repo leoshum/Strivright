@@ -3,10 +3,9 @@ import 'package:flutter/material.dart';
 class Dialogs {
   _confirmResult(bool isYes, BuildContext context) {
     if (isYes) {
-      print('Yes action');
+      // Navigator.pop(context);
       Navigator.of(context).pushReplacementNamed('/legacy');
     } else {
-      print('No action');
       Navigator.pop(context);
     }
   }
