@@ -7,7 +7,6 @@ import 'package:app_flutter/common/widgets/loader.widget.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
-import 'package:location/location.dart';
 import 'package:app_flutter/common/services/user.dart';
 import 'package:rxdart/rxdart.dart';
 
@@ -22,7 +21,6 @@ class DrawerPageState extends State<DrawerPage> {
   GlobalKey<SignatureState> signatureKey = GlobalKey();
   bool loader = false;
   var image;
-  Map<String, double> userLocation;
   var _firestore = Firestore.instance;
   @override
   void initState() {
@@ -33,7 +31,7 @@ class DrawerPageState extends State<DrawerPage> {
     return FloatingActionButton(
       backgroundColor: Color.fromRGBO(34, 148, 237, 1),
       onPressed: () {
-        Navigator.of(context).pushReplacementNamed('/legacy');
+        Navigator.pop(context);
       },
       tooltip: 'Add',
       child: Icon(Icons.arrow_back),
@@ -48,54 +46,59 @@ class DrawerPageState extends State<DrawerPage> {
             loaderBlock.isLoading,
             (userUid, isLoading) => [userUid, isLoading]),
         builder: (context, AsyncSnapshot<List> snapshot) {
-          return Scaffold(
-            body: snapshot.data[1] ? Loader() : Signature(key: signatureKey),
-            floatingActionButton: Padding(
-              padding: const EdgeInsets.only(left: 28.0),
-              child: snapshot.data[1]
-                  ? null
-                  : Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: <Widget>[
-                        _button(),
-                        FloatingActionButton(
-                          backgroundColor: Color.fromRGBO(34, 148, 237, 1),
-                          onPressed: () async {
-                            info();
-                          },
-                          tooltip: 'Add',
-                          child: Icon(Icons.help_outline, color: Colors.white),
-                        ),
-                        FloatingActionButton(
-                          backgroundColor: Color.fromRGBO(34, 148, 237, 1),
-                          onPressed: () {
-                            signatureKey.currentState.clearPoints();
-                          },
-                          tooltip: 'Add',
-                          child: Text('Clear'),
-                        ),
-                        FloatingActionButton(
-                          backgroundColor: Color.fromRGBO(34, 148, 237, 1),
-                          onPressed: () {
-                            loaderBlock.setLoaderState(true);
-                            setState(() {
-                              image = signatureKey.currentState.rendered;
-                            });
-                            showImage(context, snapshot.data[0]).then((data) =>
-                                _getLocation(snapshot.data[0]).then((data) =>
-                                    Navigator.of(context)
-                                        .pushReplacementNamed('/homepage')
-                                        .then((data) {
-                                      loaderBlock.setLoaderState(false);
-                                    })));
-                          },
-                          tooltip: 'Add',
-                          child: Text('Save'),
-                        ),
-                      ],
-                    ),
-            ),
-          );
+          print(snapshot.data);
+          return snapshot.data is List
+              ? Scaffold(
+                  body: snapshot.data[1]
+                      ? Loader()
+                      : Signature(key: signatureKey),
+                  floatingActionButton: Padding(
+                    padding: const EdgeInsets.only(left: 28.0),
+                    child: snapshot.data[1]
+                        ? null
+                        : Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: <Widget>[
+                              _button(),
+                              FloatingActionButton(
+                                backgroundColor:
+                                    Color.fromRGBO(34, 148, 237, 1),
+                                onPressed: () async {
+                                  info();
+                                },
+                                tooltip: 'Add',
+                                child: Icon(Icons.help_outline,
+                                    color: Colors.white),
+                              ),
+                              FloatingActionButton(
+                                backgroundColor:
+                                    Color.fromRGBO(34, 148, 237, 1),
+                                onPressed: () {
+                                  signatureKey.currentState.clearPoints();
+                                },
+                                tooltip: 'Add',
+                                child: Text('Clear'),
+                              ),
+                              FloatingActionButton(
+                                backgroundColor:
+                                    Color.fromRGBO(34, 148, 237, 1),
+                                onPressed: () {
+                                  loaderBlock.setLoaderState(true);
+                                  setState(() {
+                                    image = signatureKey.currentState.rendered;
+                                  });
+                                  showImage(context, snapshot.data[0]).then(
+                                      (data) => Navigator.of(context)
+                                          .pushReplacementNamed('/homepage'));
+                                },
+                                tooltip: 'Add',
+                                child: Text('Save'),
+                              ),
+                            ],
+                          ),
+                  ),
+                )
+              : Loader();
         });
   }
 
@@ -137,24 +140,7 @@ class DrawerPageState extends State<DrawerPage> {
     return docId;
   }
 
-  Future<LocationData> _getLocation(userId) async {
-    LocationData currentLocation;
-    Location location = new Location();
-    try {
-      currentLocation = await location.getLocation();
-      String docId;
-      docId = await _getDocId(userId);
-      _firestore.collection('users').document(docId).updateData({
-        'lat': currentLocation.latitude,
-        'lng': currentLocation.longitude,
-        'trust': true
-      });
-    } catch (e) {
-      print(e);
-      currentLocation = null;
-    }
-    return currentLocation;
-  }
+
 
   Future<dynamic> showImage(BuildContext context, userId) async {
     final ui.Image pngBytes = await Future<ui.Image>.value(image);
@@ -174,7 +160,7 @@ class DrawerPageState extends State<DrawerPage> {
     await _firestore
         .collection('users')
         .document(docId)
-        .updateData({'signUrl': url, 'createAt': now});
+        .updateData({'signUrl': url, 'createAt': now, 'trust': true});
   }
 }
 

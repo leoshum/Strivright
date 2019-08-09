@@ -18,6 +18,7 @@ class _SignInState extends State<SignIn> {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   Future<FirebaseUser> _signIn(BuildContext context) async {
     loaderBlock.setLoaderState(true);
+
     AuthResult result = await _auth.signInWithEmailAndPassword(
         email: _email, password: _password);
     FirebaseUser user = result.user;
@@ -107,9 +108,7 @@ class _SignInState extends State<SignIn> {
                                       }
                                       userBlock.setUserUid(user.uid);
                                       Navigator.of(context)
-                                          .pushReplacementNamed('/legacy')
-                                          .then((data) => loaderBlock
-                                              .setLoaderState(false));
+                                          .pushReplacementNamed('/legacy');
                                     });
                                   }).catchError((dynamic error) {
                                     loaderBlock.setLoaderState(false);

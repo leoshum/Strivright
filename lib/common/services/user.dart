@@ -6,6 +6,7 @@ class UserBloc {
   Observable<String> get userUid => _userSequence.stream;
 
   setUserUid(String userUid) async {
+    print(userUid);
     _userSequence.add(userUid);
   }
 
