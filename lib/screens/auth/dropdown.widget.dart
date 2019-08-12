@@ -5,15 +5,6 @@ class DropDown extends StatefulWidget {
   _DropDownState createState() => _DropDownState();
 }
 
-class Sites {
-  int id;
-  String name;
-  Sites(this.id, this.name);
-  static List<Sites> getSites() {
-    return <Sites>[Sites(1, 'Site 1'), Sites(2, 'Site 2')];
-  }
-}
-
 class _DropDownState extends State<DropDown> {
   List<Sites> _sites = Sites.getSites();
   List<DropdownMenuItem<Sites>> _dropDownMenuItems;
@@ -59,5 +50,14 @@ class _DropDownState extends State<DropDown> {
             onChanged: onChangeDropDownItem,
           ),
         ));
+  }
+}
+
+class Sites {
+  int id;
+  String name;
+  Sites(this.id, this.name);
+  static List<Sites> getSites() {
+    return <Sites>[Sites(1, 'Site 1'), Sites(2, 'Site 2')];
   }
 }

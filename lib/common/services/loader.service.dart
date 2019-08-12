@@ -7,7 +7,6 @@ class Loading {
   setLoaderState(bool isLoading) async {
     _loaderSequence.add(isLoading);
   }
-
   dispose() {
     _loaderSequence.close();
   }

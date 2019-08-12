@@ -1,14 +1,8 @@
 import 'package:app_flutter/common/services/loader.service.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:app_flutter/screens/legacy/agreement.dart';
 
 class LegacyPage extends StatelessWidget {
-  final FirebaseAuth _auth = FirebaseAuth.instance;
-
-  Future<FirebaseUser> _signOut() async {
-    await _auth.signOut();
-  }
   @override
   Widget build(BuildContext context) {
     loaderBlock.setLoaderState(false);

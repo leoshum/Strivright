@@ -1,10 +1,9 @@
 import 'package:app_flutter/common/services/loader.service.dart';
 import 'package:app_flutter/common/widgets/loader.widget.dart';
 import 'package:app_flutter/screens/auth/dropdown.widget.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:app_flutter/common/services/user.serivce.dart';
+import 'package:app_flutter/common/services/user.service.dart';
 
 class SignIn extends StatefulWidget {
   @override
@@ -14,7 +13,6 @@ class SignIn extends StatefulWidget {
 class _SignInState extends State<SignIn> {
   String _email;
   String _password;
-  var _firestore = Firestore.instance;
   final FirebaseAuth _auth = FirebaseAuth.instance;
   Future<FirebaseUser> _signIn(BuildContext context) async {
     loaderBlock.setLoaderState(true);
@@ -23,7 +21,6 @@ class _SignInState extends State<SignIn> {
     FirebaseUser user = result.user;
     return user;
   }
-
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   _showSnackBar(error) {
     final snackBar = SnackBar(
@@ -41,9 +38,8 @@ class _SignInState extends State<SignIn> {
         body: StreamBuilder(
             stream: loaderBlock.isLoading,
             builder: (context, AsyncSnapshot<bool> snapshot) {
-              return snapshot.data
-                  ? Loader()
-                  : Center(
+              return snapshot.data==null || !snapshot.data
+                  ? Center(
                       child: Container(
                         padding: EdgeInsets.all(25.0),
                         child: Column(
@@ -57,7 +53,7 @@ class _SignInState extends State<SignIn> {
                                   labelStyle: TextStyle(fontSize: 18.0)),
                               onChanged: (value) {
                                 setState(() {
-                                  _email = value;
+                                  this._email = value;
                                 });
                               },
                             ),
@@ -68,7 +64,7 @@ class _SignInState extends State<SignIn> {
                                   labelStyle: TextStyle(fontSize: 18.0)),
                               onChanged: (value) {
                                 setState(() {
-                                  _password = value;
+                                  this._password = value;
                                 });
                               },
                               obscureText: true,
@@ -90,9 +86,9 @@ class _SignInState extends State<SignIn> {
                                 onPressed: () {
                                   _signIn(context).then((dynamic user) {
                                     userBlock.setUserUid(user);
-                                    Navigator.of(context)
+                                    return Navigator.of(context)
                                         .pushReplacementNamed('/homepage');
-                                  }).catchError((dynamic error) {
+                                  }).catchError((error) {
                                     loaderBlock.setLoaderState(false);
                                     _showSnackBar('Wrong credentials');
                                   });
@@ -102,7 +98,8 @@ class _SignInState extends State<SignIn> {
                           ],
                         ),
                       ),
-                    );
+                    )
+                  : Loader();
             }));
   }
 }

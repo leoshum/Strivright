@@ -1,16 +1,7 @@
 import 'package:flutter/material.dart';
 
 class Dialogs {
-  _confirmResult(bool isYes, BuildContext context) {
-    if (isYes) {
-      // Navigator.pop(context);
-      Navigator.of(context).pushReplacementNamed('/legacy');
-    } else {
-      Navigator.pop(context);
-    }
-  }
-
-  confirm(BuildContext context, String title, String description) {
+  confirm(BuildContext context, String title, String description, Function action) {
     return showDialog(
         context: context,
         barrierDismissible: true,
@@ -25,13 +16,13 @@ class Dialogs {
             actions: <Widget>[
               FlatButton(
                 onPressed: () {
-                  _confirmResult(false, context);
+                  Navigator.pop(context);
                 },
                 child: Text('Cancel'),
               ),
               FlatButton(
                 onPressed: () {
-                  _confirmResult(true, context);
+                  action(context);
                 },
                 child: Text('Yes'),
               )
