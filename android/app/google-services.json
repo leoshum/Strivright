@@ -1,0 +1,40 @@
+{
+  "project_info": {
+    "project_number": "671290661528",
+    "firebase_url": "https://strivright-8e755.firebaseio.com",
+    "project_id": "strivright-8e755",
+    "storage_bucket": "strivright-8e755.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:671290661528:android:11028dfe246cadbc",
+        "android_client_info": {
+          "package_name": "com.example.flutter_demo"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "671290661528-c5e3fna1rqq8019ktep6k9laadg5qkp8.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCfW6ic4tvfFES1h62U6XVrcL49MXiYIYE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "671290661528-c5e3fna1rqq8019ktep6k9laadg5qkp8.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
