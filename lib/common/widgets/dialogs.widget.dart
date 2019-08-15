@@ -9,9 +9,7 @@ class Dialogs {
           return AlertDialog(
             title: Text(title),
             content: SingleChildScrollView(
-              child: ListBody(
-                children: <Widget>[Text(description)],
-              ),
+              child: Text(description),
             ),
             actions: <Widget>[
               FlatButton(
