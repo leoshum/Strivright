@@ -6,6 +6,7 @@ import 'package:flutter_demo/common/widgets/dialogs.widget.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:rxdart/rxdart.dart';
+import 'package:flutter_nfc_reader/flutter_nfc_reader.dart';
 
 class HomePage extends StatefulWidget {
   @override
@@ -37,6 +38,52 @@ class _HomePageState extends State<HomePage> {
       });
     });
     super.initState();
+  }
+
+  NfcData _nfcData;
+  Future<void> startNFC() async {
+    NfcData response;
+    setState(() {
+      _nfcData = NfcData();
+      _nfcData.status = NFCStatus.reading;
+    });
+
+    print('NFC: Scan started');
+
+    try {
+      print('NFC: Scan readed NFC tag');
+      response = await FlutterNfcReader.read();
+    } catch (e) {
+      print(e);
+      print('NFC: Scan stopped exception');
+    }
+    setState(() {
+      _nfcData = response;
+    });
+    print('NFC data $_nfcData');
+  }
+
+  Future<void> stopNFC() async {
+    NfcData response;
+
+    try {
+      print('NFC: Stop scan by user');
+      response = await FlutterNfcReader.stop();
+    } catch (e) {
+      print('NFC: Stop scan exception');
+      response = NfcData(
+        id: '',
+        content: '',
+        error: 'NFC scan stop exception',
+        statusMapper: '',
+      );
+      response.status = NFCStatus.error;
+    }
+
+    setState(() {
+      _nfcData = response;
+    });
+    print('NFC data $_nfcData');
   }
 
   @override
@@ -136,6 +183,26 @@ class _HomePageState extends State<HomePage> {
                           )),
                     ],
                   ),
+                  RaisedButton(
+                    child: Text(
+                      "Read NFC",
+                      style: (TextStyle(fontSize: 20.0)),
+                    ),
+                    onPressed: () {
+                      startNFC();
+                    },
+                  ),
+                  RaisedButton(
+                      child: Text(
+                        "Stop NFC",
+                        style: (TextStyle(fontSize: 20.0)),
+                      ),
+                      onPressed: () {
+                        stopNFC();
+                      }),
+                      Text(_nfcData?.content ?? ''),
+                      Text(_nfcData?.error ?? ''),
+                        Text(_nfcData?.statusMapper ?? ''),
                   clockInTime.length > 0
                       ? Padding(
                           padding: const EdgeInsets.all(20.0),
